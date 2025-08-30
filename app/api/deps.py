@@ -1,26 +1,26 @@
-from typing import Annotated, Generator
+from typing import Annotated, AsyncGenerator
 
 from fastapi import Depends
 from surrealdb import (
-    BlockingHttpSurrealConnection,
-    BlockingWsSurrealConnection,
-    Surreal,
+    AsyncHttpSurrealConnection,
+    AsyncWsSurrealConnection,
+    AsyncSurreal,
 )
 
 from ..core.config import settings
 
 
-def get_db() -> Generator[
-    BlockingWsSurrealConnection | BlockingHttpSurrealConnection, None, None
+async def get_db() -> AsyncGenerator[
+    AsyncWsSurrealConnection | AsyncHttpSurrealConnection, None,
 ]:
-    with Surreal(settings.SURREALDB_URL) as db:
-        db.signin(
+    async with AsyncSurreal(settings.SURREALDB_URL) as db:
+        await db.signin(
             {
                 "username": settings.SURREALDB_USER,
                 "password": settings.SURREALDB_PASS,
             }
         )
-        db.use(
+        await db.use(
             settings.SURREALDB_NS,
             settings.SURREALDB_DB,
         )
@@ -28,6 +28,6 @@ def get_db() -> Generator[
 
 
 DbDep = Annotated[
-    BlockingWsSurrealConnection | BlockingHttpSurrealConnection,
+    AsyncWsSurrealConnection | AsyncHttpSurrealConnection,
     Depends(get_db),
 ]
