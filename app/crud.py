@@ -1,5 +1,5 @@
 from app.api.deps import DbDep
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 from app.models import User, UserCreate
 
 
@@ -33,16 +33,18 @@ def create_user(
 #     return db_user
 
 
-# def get_user_by_email(*, db: DbDep, email: str) -> User | None:
-#     statement = select(User).where(User.email == email)
-#     db_user = db.exec(statement).first()
-#     return db_user
+def get_user_by_email(*, db: DbDep, email: str) -> User | None:
+    statement = db.query("SELECT * FROM user WHERE email = $email", {"email": email})
+    db_user = statement[0] if statement else None
+    if db_user:
+        return User.model_validate(db_user)
+    return None
 
 
-# def authenticate(*, db: DbDep, email: str, password: str) -> User | None:
-#     db_user = get_user_by_email(db=db, email=email)
-#     if not db_user:
-#         return None
-#     if not verify_password(password, db_user.hashed_password):
-#         return None
-#     return db_user
+def authenticate(*, db: DbDep, email: str, password: str) -> User | None:
+    db_user = get_user_by_email(db=db, email=email)
+    if not db_user:
+        return None
+    if not verify_password(password, db_user.hashed_password):
+        return None
+    return db_user
