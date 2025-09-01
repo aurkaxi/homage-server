@@ -15,14 +15,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/access-token")
-def login_access_token(
+async def login_access_token(
     session: DbDep,
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 ) -> Token:
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = crud.authenticate(
+    user =  await crud.authenticate(
         db=session, email=form_data.username, password=form_data.password
     )
     if not user:
@@ -36,7 +36,7 @@ def login_access_token(
 
 
 @router.post("/register")
-def register_user(user: UserCreate, db: DbDep):
+async def register_user(user: UserCreate, db: DbDep):
     """
     Register a new user
     """
@@ -44,7 +44,7 @@ def register_user(user: UserCreate, db: DbDep):
     if existing_user:
         pass
     else:
-        crud.create_user(db=db, user_create=user)
+        await crud.create_user(db=db, user_create=user)
     return {
         "message": "If registration is successful, you will receive an email shortly."
     }
