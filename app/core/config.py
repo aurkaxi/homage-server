@@ -33,7 +33,7 @@ class Settings(BaseSettings):
         env_ignore_empty=True,
         extra="ignore",
     )
-    API_PREFIX_VERSIONED: str = "/api/v1"
+    API_PREFIX_VERSIONED: str
     #     SECRET_KEY: str = secrets.token_urlsafe(32)
     #     # 60 minutes * 24 hours * 8 days = 8 days
     #     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 8
@@ -53,11 +53,11 @@ class Settings(BaseSettings):
 
     #     PROJECT_NAME: str
     #     SENTRY_DSN: HttpUrl | None = None
-    SURREALDB_URL: str = "ws://localhost:8000/rpc"
-    SURREALDB_USER: str = "root"
-    SURREALDB_PASS: str = "root"
-    SURREALDB_NS: str = "test"
-    SURREALDB_DB: str = "test"
+    SURREALDB_URL: str
+    SURREALDB_USER: str
+    SURREALDB_PASS: str
+    SURREALDB_NS: str
+    SURREALDB_DB: str
 
 
 #     SMTP_TLS: bool = True
