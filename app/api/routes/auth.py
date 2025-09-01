@@ -40,7 +40,7 @@ async def register_user(user: UserCreate, db: DbDep):
     """
     Register a new user
     """
-    existing_user = crud.get_user_by_email(db=db, email=user.email)
+    existing_user = await crud.get_user_by_email(db=db, email=user.email)
     if existing_user:
         pass
     else:

@@ -31,7 +31,9 @@ async def create_user(
 
 
 async def get_user_by_email(*, db: DbDep, email: str) -> User | None:
-    statement = await db.query("SELECT * FROM user WHERE email = $email", {"email": email})
+    statement = await db.query(
+        "SELECT * FROM user WHERE email = $email", {"email": email}
+    )
     db_user = statement[0] if statement else None
     if db_user:
         return User.model_validate(db_user)
