@@ -3,6 +3,7 @@ from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
+from surrealdb import RecordID
 
 from app.api.deps import DbDep
 from app.models import ID
@@ -51,3 +52,24 @@ async def create_project(db: DbDep, project: ProjectCreate):
     db_obj = Project(**project.model_dump())
     await db.create("project", db_obj.model_dump())
     return db_obj
+
+
+@router.get("/{project_id}")
+async def get_project(db: DbDep, project_id: ID):
+    """
+    Get a project by ID
+    """
+    project = await db.select(RecordID("project", str(project_id)))
+    assert isinstance(project, dict) or project is None
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    return Project(**project)
+
+
+@router.get("/")
+async def get_projects(db: DbDep):
+    """
+    Get all projects
+    """
+    projects = await db.select("project")
+    return [Project(**proj) for proj in projects if isinstance(proj, dict)]
