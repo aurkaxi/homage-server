@@ -73,3 +73,16 @@ async def get_projects(db: DbDep):
     """
     projects = await db.select("project")
     return [Project(**proj) for proj in projects if isinstance(proj, dict)]
+
+@router.delete("/{project_id}")
+async def delete_project(db: DbDep, project_id: ID):
+    """
+    Delete a project by ID
+    """
+    record = RecordID("project", str(project_id))
+    project = await db.select(record)
+    assert isinstance(project, dict) or project is None
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    await db.delete(record)
+    return {"detail": "Project deleted"}
