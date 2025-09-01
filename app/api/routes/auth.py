@@ -35,7 +35,7 @@ def login_access_token(
     )
 
 
-@router.post("/register", response_model=UserPublic)
+@router.post("/register")
 def register_user(user: UserCreate, db: DbDep):
     """
     Register a new user

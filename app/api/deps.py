@@ -56,11 +56,10 @@ def get_current_user(db: DbDep, token: TokenDep) -> User:
             detail="Could not validate credentials",
         )
     user = db.select(RecordID("user", token_data.sub))
-    assert user is dict[any, any]
+    assert isinstance(user, dict)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    if not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
+    user = User(**user)
     return user
 
 
