@@ -1,14 +1,15 @@
-from typing import Annotated, AsyncGenerator
+from typing import Annotated
 
 import jwt
 from fastapi import Depends, HTTPException, status
+from fastapi.concurrency import asynccontextmanager
 from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from surrealdb import (
     AsyncHttpSurrealConnection,
-    AsyncWsSurrealConnection,
     AsyncSurreal,
+    AsyncWsSurrealConnection,
     RecordID,
 )
 
@@ -16,31 +17,41 @@ from app.core import security
 from app.core.config import settings
 from app.models import TokenPayload, User
 
-
-async def get_db() -> AsyncGenerator[
-    AsyncWsSurrealConnection | AsyncHttpSurrealConnection, None,
-]:
-    async with AsyncSurreal(settings.SURREALDB_URL) as db:
-        await db.signin(
-            {
-                "username": settings.SURREALDB_USER,
-                "password": settings.SURREALDB_PASS,
-                "namespace": settings.SURREALDB_NS,
-                "database": settings.SURREALDB_DB,
-            }
-        )
-        yield db
+DB: AsyncWsSurrealConnection | AsyncHttpSurrealConnection | None = None
 
 
-reusable_oauth2 = OAuth2PasswordBearer(
-    tokenUrl=f"{settings.API_PREFIX_VERSIONED}/auth/access-token"
-)
+@asynccontextmanager
+async def lifespan(app):
+    global DB
+    DB = AsyncSurreal(settings.SURREALDB_URL)
+    await DB.signin(
+        {
+            "username": settings.SURREALDB_USER,
+            "password": settings.SURREALDB_PASS,
+            "namespace": settings.SURREALDB_NS,
+            "database": settings.SURREALDB_DB,
+        }
+    )
+    yield
+
+    await DB.close()
+
+
+async def get_db() -> AsyncWsSurrealConnection | AsyncHttpSurrealConnection:
+    if DB is None:
+        raise RuntimeError("Database not initialized")
+    return DB
+
+
 DbDep = Annotated[
     AsyncWsSurrealConnection | AsyncHttpSurrealConnection,
     Depends(get_db),
 ]
 
 
+reusable_oauth2 = OAuth2PasswordBearer(
+    tokenUrl=f"{settings.API_PREFIX_VERSIONED}/auth/access-token"
+)
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
