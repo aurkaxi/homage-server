@@ -1,4 +1,4 @@
-from typing import Annotated, Generator
+from typing import Annotated, AsyncGenerator
 
 import jwt
 from fastapi import Depends, HTTPException, status
@@ -6,10 +6,10 @@ from fastapi.security import OAuth2PasswordBearer
 from jwt.exceptions import InvalidTokenError
 from pydantic import ValidationError
 from surrealdb import (
-    BlockingHttpSurrealConnection,
-    BlockingWsSurrealConnection,
+    AsyncHttpSurrealConnection,
+    AsyncWsSurrealConnection,
+    AsyncSurreal,
     RecordID,
-    Surreal,
 )
 
 from app.core import security
@@ -17,11 +17,11 @@ from app.core.config import settings
 from app.models import TokenPayload, User
 
 
-def get_db() -> Generator[
-    BlockingWsSurrealConnection | BlockingHttpSurrealConnection, None, None
+async def get_db() -> AsyncGenerator[
+    AsyncWsSurrealConnection | AsyncHttpSurrealConnection, None,
 ]:
-    with Surreal(settings.SURREALDB_URL) as db:
-        db.signin(
+    async with AsyncSurreal(settings.SURREALDB_URL) as db:
+        await db.signin(
             {
                 "username": settings.SURREALDB_USER,
                 "password": settings.SURREALDB_PASS,
@@ -36,7 +36,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
     tokenUrl=f"{settings.API_PREFIX_VERSIONED}/auth/access-token"
 )
 DbDep = Annotated[
-    BlockingWsSurrealConnection | BlockingHttpSurrealConnection,
+    AsyncWsSurrealConnection | AsyncHttpSurrealConnection,
     Depends(get_db),
 ]
 
