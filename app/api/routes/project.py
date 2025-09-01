@@ -31,7 +31,6 @@ class ProjectCreate(BaseModel):
 
 class Project(ProjectBase):
     id: ID = Field(default_factory=uuid.uuid4)
-    pass
 
 
 @router.post("/")
@@ -74,6 +73,7 @@ async def get_projects(db: DbDep):
     projects = await db.select("project")
     return [Project(**proj) for proj in projects if isinstance(proj, dict)]
 
+
 @router.patch("/{project_id}")
 async def mark_used_today(db: DbDep, project_id: ID):
     """
@@ -98,6 +98,7 @@ async def mark_used_today(db: DbDep, project_id: ID):
     proj.last = today
     await db.update(record, proj.model_dump())
     return proj
+
 
 @router.delete("/{project_id}")
 async def delete_project(db: DbDep, project_id: ID):

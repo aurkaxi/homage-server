@@ -23,7 +23,7 @@ DB: AsyncWsSurrealConnection | AsyncHttpSurrealConnection | None = None
 @asynccontextmanager
 async def lifespan(app):
     global DB
-    DB = AsyncSurreal("ws://localhost:8000/rpc")
+    DB = AsyncSurreal(settings.SURREALDB_URL)
     await DB.signin(
         {
             "username": settings.SURREALDB_USER,
