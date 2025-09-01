@@ -27,8 +27,6 @@ def login_access_token(
     )
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not user.is_active:
-        raise HTTPException(status_code=400, detail="Inactive user")
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return Token(
         access_token=security.create_access_token(
@@ -42,8 +40,14 @@ def register_user(user: UserCreate, db: DbDep):
     """
     Register a new user
     """
-    db_user = crud.create_user(db=db, user_create=user)
-    return db_user
+    existing_user = crud.get_user_by_email(db=db, email=user.email)
+    if existing_user:
+        pass
+    else:
+        crud.create_user(db=db, user_create=user)
+    return {
+        "message": "If registration is successful, you will receive an email shortly."
+    }
 
 
 @router.get("/test-token", response_model=UserPublic)
