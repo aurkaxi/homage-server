@@ -1,5 +1,5 @@
 import uuid
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
@@ -73,6 +73,31 @@ async def get_projects(db: DbDep):
     """
     projects = await db.select("project")
     return [Project(**proj) for proj in projects if isinstance(proj, dict)]
+
+@router.patch("/{project_id}")
+async def mark_used_today(db: DbDep, project_id: ID):
+    """
+    Mark a project as used today
+    """
+    record = RecordID("project", str(project_id))
+    project = await db.select(record)
+    assert isinstance(project, dict) or project is None
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+
+    proj = Project(**project)
+    today = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
+    if proj.last == today:
+        raise HTTPException(status_code=400, detail="Project already marked today")
+    elif proj.last == today - timedelta(days=1):
+        proj.streak += 1
+        if proj.streak > proj.longest_streak:
+            proj.longest_streak = proj.streak
+    else:
+        proj.streak = 1
+    proj.last = today
+    await db.update(record, proj.model_dump())
+    return proj
 
 @router.delete("/{project_id}")
 async def delete_project(db: DbDep, project_id: ID):
