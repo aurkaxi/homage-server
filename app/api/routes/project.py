@@ -13,6 +13,7 @@ router = APIRouter(prefix="/project", tags=["project"])
 
 class ProjectBase(BaseModel):
     # id: ID = Field(default_factory=uuid.uuid4) -> moved to Project
+    description: str | None = None
     last: datetime = Field(
         default_factory=lambda: datetime.today().replace(
             hour=0, minute=0, second=0, microsecond=0
@@ -33,7 +34,7 @@ class Project(ProjectBase):
     id: ID = Field(default_factory=uuid.uuid4)
 
 
-@router.post("/")
+@router.post("")
 async def create_project(db: DbDep, project: ProjectCreate):
     """
     Create a new project
@@ -65,7 +66,7 @@ async def get_project(db: DbDep, project_id: ID):
     return Project(**project)
 
 
-@router.get("/")
+@router.get("")
 async def get_projects(db: DbDep):
     """
     Get all projects
