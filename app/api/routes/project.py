@@ -13,15 +13,16 @@ router = APIRouter(prefix="/project", tags=["project"])
 
 class ProjectBase(BaseModel):
     # id: ID = Field(default_factory=uuid.uuid4) -> moved to Project
-    description: str | None = None
-    last: datetime = Field(
+    description: str = ""
+    lastUsed: datetime = Field(
         default_factory=lambda: datetime.today().replace(
             hour=0, minute=0, second=0, microsecond=0
         )
     )
-    longest_streak: int = 0
+    longestStreak: int = 0
     name: str
-    streak: int = 0
+    currentStreak: int = 0
+    total: int = 0
     url: str
 
 
@@ -88,15 +89,15 @@ async def mark_used_today(db: DbDep, project_id: ID):
 
     proj = Project(**project)
     today = datetime.today().replace(hour=0, minute=0, second=0, microsecond=0)
-    if proj.last == today:
+    if proj.lastUsed == today:
         raise HTTPException(status_code=400, detail="Project already marked today")
-    elif proj.last == today - timedelta(days=1):
-        proj.streak += 1
-        if proj.streak > proj.longest_streak:
-            proj.longest_streak = proj.streak
+    elif proj.lastUsed == today - timedelta(days=1):
+        proj.currentStreak += 1
+        if proj.currentStreak > proj.longestStreak:
+            proj.longestStreak = proj.currentStreak
     else:
-        proj.streak = 1
-    proj.last = today
+        proj.currentStreak = 1
+    proj.lastUsed = today
     await db.update(record, proj.model_dump())
     return proj
 
