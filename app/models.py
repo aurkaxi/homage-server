@@ -1,22 +1,19 @@
-import uuid
 from typing import Annotated, Any
 
 from pydantic import BaseModel, BeforeValidator, EmailStr, Field
 from surrealdb import RecordID
 
 
-def uuid_from_recordID(record_id: Any) -> uuid.UUID:
-    if isinstance(record_id, uuid.UUID):
-        return record_id
+def str_from_recordID(record_id: Any) -> str:
     if isinstance(record_id, RecordID):
         return record_id.id
     if isinstance(record_id, str):
-        return uuid.UUID(record_id)
+        return record_id
 
     raise ValueError("Invalid RecordID")
 
 
-ID = Annotated[uuid.UUID, BeforeValidator(uuid_from_recordID)]
+ID = Annotated[str | None, BeforeValidator(str_from_recordID)]
 
 
 # Shared properties
@@ -56,13 +53,13 @@ class UpdatePassword(BaseModel):
 # Database model, database table inferred from class name
 class User(UserBase):
     # id: uuid.UUID = Field(default_factory=uuid.uuid4)
-    id: ID = Field(default_factory=uuid.uuid4)
+    id: ID
     hashed_password: str
 
 
 # Properties to return via API, id is always required
 class UserPublic(UserBase):
-    id: uuid.UUID
+    id: ID
 
 
 class UsersPublic(BaseModel):

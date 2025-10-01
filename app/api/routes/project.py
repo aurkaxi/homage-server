@@ -1,4 +1,3 @@
-import uuid
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, HTTPException
@@ -32,7 +31,7 @@ class ProjectCreate(BaseModel):
 
 
 class Project(ProjectBase):
-    id: ID = Field(default_factory=uuid.uuid4)
+    id: ID
 
 
 @router.post("")

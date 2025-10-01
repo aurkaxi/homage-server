@@ -55,7 +55,7 @@ reusable_oauth2 = OAuth2PasswordBearer(
 TokenDep = Annotated[str, Depends(reusable_oauth2)]
 
 
-def get_current_user(db: DbDep, token: TokenDep) -> User:
+async def get_current_user(db: DbDep, token: TokenDep) -> User:
     try:
         payload = jwt.decode(
             token, settings.SECRET_KEY, algorithms=[security.ALGORITHM]
@@ -66,11 +66,12 @@ def get_current_user(db: DbDep, token: TokenDep) -> User:
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Could not validate credentials",
         )
-    user = db.select(RecordID("user", token_data.sub))
+    user = await db.select(RecordID("user", token_data.sub))
     assert isinstance(user, dict)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     user = User(**user)
+    print(f"Current user: {user}")
     return user
 
 
