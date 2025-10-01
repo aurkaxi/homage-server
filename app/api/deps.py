@@ -67,9 +67,9 @@ async def get_current_user(db: DbDep, token: TokenDep) -> User:
             detail="Could not validate credentials",
         )
     user = await db.select(RecordID("user", token_data.sub))
-    assert isinstance(user, dict)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    assert isinstance(user, dict)
     user = User(**user)
     print(f"Current user: {user}")
     return user
